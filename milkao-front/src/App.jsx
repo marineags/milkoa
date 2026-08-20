@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 import Sidebar from './components/sidebar/Sidebar.jsx'
@@ -11,49 +11,181 @@ import Register from './pages/register/Register.jsx'
 import CreateFarm from './pages/farm/CreateFarm.jsx'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard')
-  const [user, setUser] = useState(null)
+
+  // On récupère la dernière page visitée
+  const [currentPage, setCurrentPage] = useState(() => {
+    return localStorage.getItem('currentPage') || 'dashboard'
+  })
+
+  // On récupère l'utilisateur connecté
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user')
+
+    return savedUser ? JSON.parse(savedUser) : null
+  })
+
   const [authPage, setAuthPage] = useState('login')
+
   const [needsFarm, setNeedsFarm] = useState(false)
-  const [selectedFarm, setSelectedFarm] = useState(null)
+
+  // On récupère la dernière ferme sélectionnée
+  const [selectedFarm, setSelectedFarm] = useState(() => {
+    const savedFarm = localStorage.getItem('selectedFarm')
+
+    return savedFarm ? JSON.parse(savedFarm) : null
+  })
+
   const [farms, setFarms] = useState([])
 
- const handleLogin = async (loggedUser) => {
-  setUser(loggedUser)
 
-  try {
-    const response = await fetch(
-      `http://localhost:8080/farms/user/${loggedUser.id}`
-    )
+  // ==========================================
+  // SAUVEGARDE DE LA PAGE ACTUELLE
+  // ==========================================
 
-    const farms = await response.json()
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage)
+  }, [currentPage])
 
-    setFarms(farms)
 
-    if (farms.length > 0) {
-      setSelectedFarm(farms[0])
-    } else {
-      setNeedsFarm(true)
+  // ==========================================
+  // SAUVEGARDE DE LA FERME SÉLECTIONNÉE
+  // ==========================================
+
+  useEffect(() => {
+    if (selectedFarm) {
+      localStorage.setItem(
+        'selectedFarm',
+        JSON.stringify(selectedFarm)
+      )
     }
-  } catch (error) {
-    console.error('Erreur récupération fermes :', error)
-  }
-}
+  }, [selectedFarm])
 
+
+  // ==========================================
+  // RÉCUPÉRATION DES FERMES
+  // ==========================================
+
+  useEffect(() => {
+
+    if (!user) return
+
+    const loadFarms = async () => {
+
+      try {
+
+        const response = await fetch(
+          `http://localhost:8080/farms/user/${user.id}`
+        )
+
+        const farmsData = await response.json()
+
+        setFarms(farmsData)
+
+        if (farmsData.length > 0) {
+
+          setNeedsFarm(false)
+
+          // Si une ferme était déjà sélectionnée,
+          // on essaie de la conserver
+          const savedFarm = localStorage.getItem('selectedFarm')
+
+          if (savedFarm) {
+
+            const parsedFarm = JSON.parse(savedFarm)
+
+            const existingFarm = farmsData.find(
+              (farm) => farm.id === parsedFarm.id
+            )
+
+            if (existingFarm) {
+              setSelectedFarm(existingFarm)
+              return
+            }
+          }
+
+          // Sinon on sélectionne la première ferme
+          setSelectedFarm(farmsData[0])
+
+        } else {
+
+          setSelectedFarm(null)
+          localStorage.removeItem('selectedFarm')
+          setNeedsFarm(true)
+
+        }
+
+      } catch (error) {
+        console.error('Erreur récupération fermes :', error)
+      }
+    }
+
+    loadFarms()
+
+  }, [user])
+
+
+  // ==========================================
+  // CONNEXION
+  // ==========================================
+
+  const handleLogin = (loggedUser) => {
+
+    setUser(loggedUser)
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(loggedUser)
+    )
+  }
+
+
+  // ==========================================
+  // INSCRIPTION
+  // ==========================================
 
   const handleRegister = (registeredUser) => {
+
     setUser(registeredUser)
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(registeredUser)
+    )
+
     setNeedsFarm(true)
   }
 
-const handleFarmCreated = (farm) => {
-  setFarms((previousFarms) => [...previousFarms, farm])
-  setSelectedFarm(farm)
-  setNeedsFarm(false)
-}
+
+  // ==========================================
+  // CRÉATION FERME
+  // ==========================================
+
+  const handleFarmCreated = (farm) => {
+
+    setFarms((previousFarms) => [
+      ...previousFarms,
+      farm
+    ])
+
+    setSelectedFarm(farm)
+
+    localStorage.setItem(
+      'selectedFarm',
+      JSON.stringify(farm)
+    )
+
+    setNeedsFarm(false)
+  }
+
+
+  // ==========================================
+  // AFFICHAGE DES PAGES
+  // ==========================================
 
   const renderPage = () => {
+
     switch (currentPage) {
+
       case 'cows':
         return <Cows />
 
@@ -61,15 +193,26 @@ const handleFarmCreated = (farm) => {
         return <Alerts />
 
       case 'imports':
-  return <Imports selectedFarm={selectedFarm} />
+        return (
+          <Imports
+            selectedFarm={selectedFarm}
+          />
+        )
 
       default:
         return <Dashboard />
     }
   }
 
+
+  // ==========================================
+  // LOGIN / REGISTER
+  // ==========================================
+
   if (!user) {
+
     if (authPage === 'register') {
+
       return (
         <Register
           onRegister={handleRegister}
@@ -86,7 +229,13 @@ const handleFarmCreated = (farm) => {
     )
   }
 
+
+  // ==========================================
+  // CRÉATION PREMIÈRE FERME
+  // ==========================================
+
   if (needsFarm) {
+
     return (
       <CreateFarm
         user={user}
@@ -95,20 +244,28 @@ const handleFarmCreated = (farm) => {
     )
   }
 
+
+  // ==========================================
+  // APPLICATION
+  // ==========================================
+
   return (
+
     <div className="app">
+
       <Sidebar
-  currentPage={currentPage}
-  setCurrentPage={setCurrentPage}
-  farms={farms}
-  selectedFarm={selectedFarm}
-  setSelectedFarm={setSelectedFarm}
-  onAddFarm={() => setNeedsFarm(true)}
-/>
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        farms={farms}
+        selectedFarm={selectedFarm}
+        setSelectedFarm={setSelectedFarm}
+        onAddFarm={() => setNeedsFarm(true)}
+      />
 
       <main className="app-content">
         {renderPage()}
       </main>
+
     </div>
   )
 }
