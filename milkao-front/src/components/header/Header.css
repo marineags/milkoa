@@ -1,0 +1,30 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #18231f;
+}
+
+.header p {
+  margin: 6px 0 0;
+  color: #7a8982;
+  font-size: 14px;
+}
+
+.header-date {
+  padding: 10px 14px;
+
+  border: 1px solid #dfe6e2;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #33413b;
+
+  font-size: 14px;
+}
