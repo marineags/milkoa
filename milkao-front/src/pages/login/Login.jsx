@@ -5,6 +5,8 @@ function Login({ onLogin,onRegisterClick }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -52,20 +54,34 @@ function Login({ onLogin,onRegisterClick }) {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+               placeholder="Adresse e-mail"
               required
             />
           </label>
 
-          <label>
-            Mot de passe
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </label>
+          <div className="password-field">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Mot de passe"
+  />
 
+  <button
+    type="button"
+    className="password-toggle"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? '🙈' : '👁️'}
+  </button>
+</div>
+<button
+  type="button"
+  className="forgot-password"
+  onClick={() => alert('Réinitialisation du mot de passe bientôt disponible')}
+>
+  Mot de passe oublié ?
+</button>
           {error && (
             <p className="login-error">
               {error}

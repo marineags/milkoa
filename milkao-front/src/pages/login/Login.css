@@ -51,3 +51,61 @@
   margin: 0;
   color: #c62828;
 }
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  padding: 4px;
+  margin: 0;
+
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.password-toggle:hover {
+  background: transparent;
+}
+
+.password-toggle:focus {
+  outline: none;
+}
+.password-field .password-toggle {
+  width: auto;
+}
+.forgot-password {
+  width: auto;
+  margin: 8px 0 18px auto;
+  padding: 0;
+
+  display: block;
+
+  border: none;
+  background: transparent;
+
+  color: #5f5f5f;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.forgot-password:hover {
+  color: #111;
+  text-decoration: underline;
+}
