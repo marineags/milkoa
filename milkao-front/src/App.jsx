@@ -37,6 +37,16 @@ function App() {
 
   const [farms, setFarms] = useState([])
 
+  const handleLogout = () => {
+  localStorage.removeItem('user')
+  localStorage.removeItem('selectedFarm')
+  localStorage.removeItem('currentPage')
+
+  setUser(null)
+  setSelectedFarm(null)
+  setFarms([])
+  setCurrentPage('dashboard')
+}
 
   // ==========================================
   // SAUVEGARDE DE LA PAGE ACTUELLE
@@ -254,13 +264,14 @@ function App() {
     <div className="app">
 
       <Sidebar
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        farms={farms}
-        selectedFarm={selectedFarm}
-        setSelectedFarm={setSelectedFarm}
-        onAddFarm={() => setNeedsFarm(true)}
-      />
+  currentPage={currentPage}
+  setCurrentPage={setCurrentPage}
+  farms={farms}
+  selectedFarm={selectedFarm}
+  setSelectedFarm={setSelectedFarm}
+  onAddFarm={() => setNeedsFarm(true)}
+  onLogout={handleLogout}
+/>
 
       <main className="app-content">
         {renderPage()}

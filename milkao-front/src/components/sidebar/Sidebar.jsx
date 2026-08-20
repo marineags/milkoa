@@ -8,7 +8,8 @@ function Sidebar({
   farms,
   selectedFarm,
   setSelectedFarm,
-  onAddFarm
+  onAddFarm,
+  onLogout
 }) {
   const [farmMenuOpen, setFarmMenuOpen] = useState(false)
 
@@ -115,13 +116,12 @@ function Sidebar({
           )}
         </div>
 
-        <div className="plan-card">
-          <strong>👑 Plan Milkao Pro</strong>
-
-          <p>Renouvellement le 18/09/2026</p>
-
-          <button>Gérer mon abonnement</button>
-        </div>
+        <button
+  className="logout-button"
+  onClick={onLogout}
+>
+  Se déconnecter
+</button>
       </div>
     </aside>
   )
