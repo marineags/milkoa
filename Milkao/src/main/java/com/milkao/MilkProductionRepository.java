@@ -13,4 +13,6 @@ public interface MilkProductionRepository extends JpaRepository<MilkProduction, 
             Integer cowId,
             LocalDate productionDate
     );
+
+    void deleteByImportId(Integer importId);
 }

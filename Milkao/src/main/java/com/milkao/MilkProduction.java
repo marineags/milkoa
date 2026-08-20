@@ -20,6 +20,9 @@ public class MilkProduction {
 
     private BigDecimal liters;
 
+    @Column(name = "import_id")
+    private Integer importId;
+
     public MilkProduction() {
     }
 
@@ -53,5 +56,12 @@ public class MilkProduction {
 
     public void setLiters(BigDecimal liters) {
         this.liters = liters;
+    }
+    public Integer getImportId() {
+        return importId;
+    }
+
+    public void setImportId(Integer importId) {
+        this.importId = importId;
     }
 }

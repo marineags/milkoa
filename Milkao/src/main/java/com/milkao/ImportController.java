@@ -3,6 +3,7 @@ package com.milkao;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -46,6 +47,19 @@ public class ImportController {
                         .body("Ce fichier a déjà été importé.");
             }
 
+            // 1. On crée d'abord l'historique de l'import
+            ImportHistory history = new ImportHistory();
+
+            history.setFileName(file.getOriginalFilename());
+            history.setType("Production");
+            history.setImportDate(java.time.LocalDateTime.now());
+            history.setStatus("Importé");
+
+            history = importHistoryRepository.save(history);
+
+            Integer importId = history.getId();
+
+            // 2. On lit le fichier
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream())
             );
@@ -66,40 +80,35 @@ public class ImportController {
 
                 String[] values = line.split(",");
 
-                Integer cowId = Integer.parseInt(values[0].trim());
+                Integer cowId =
+                        Integer.parseInt(values[0].trim());
+
                 LocalDate productionDate =
                         LocalDate.parse(values[1].trim());
 
                 BigDecimal liters =
                         new BigDecimal(values[2].trim());
 
-                if (!milkProductionRepository.existsByCowIdAndProductionDate(cowId, productionDate)) {
+                // 3. On évite les doublons
+                if (!milkProductionRepository
+                        .existsByCowIdAndProductionDate(
+                                cowId,
+                                productionDate
+                        )) {
 
-                    MilkProduction production = new MilkProduction();
+                    MilkProduction production =
+                            new MilkProduction();
 
                     production.setCowId(cowId);
                     production.setProductionDate(productionDate);
                     production.setLiters(liters);
 
+                    // 4. On relie la production à son import
+                    production.setImportId(importId);
+
                     milkProductionRepository.save(production);
                 }
-
             }
-            ImportHistory history = new ImportHistory();
-
-            history.setFileName(file.getOriginalFilename());
-            history.setType("Production");
-            history.setImportDate(java.time.LocalDateTime.now());
-            history.setStatus("Importé");
-
-            System.out.println(
-                    "Je vais enregistrer l'historique : "
-                            + file.getOriginalFilename()
-            );
-
-            importHistoryRepository.save(history);
-
-            System.out.println("Historique enregistré");
 
             return ResponseEntity.ok(
                     "Import terminé avec succès"
@@ -283,5 +292,39 @@ public class ImportController {
         return ResponseEntity.ok(
                 milkProductionRepository.findAll()
         );
+    }
+    @Transactional
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteImport(@PathVariable Integer id) {
+        try {
+
+            ImportHistory history = importHistoryRepository
+                    .findById(id)
+                    .orElse(null);
+
+            if (history == null) {
+                return ResponseEntity
+                        .notFound()
+                        .build();
+            }
+
+            if ("Production".equals(history.getType())) {
+                milkProductionRepository.deleteByImportId(id);
+            }
+
+            importHistoryRepository.deleteById(id);
+
+            return ResponseEntity.ok(
+                    "Import supprimé avec succès"
+            );
+
+        } catch (Exception error) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            "Erreur pendant la suppression : "
+                                    + error.getMessage()
+                    );
+        }
     }
     }

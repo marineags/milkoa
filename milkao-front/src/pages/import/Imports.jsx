@@ -34,22 +34,24 @@ const handleImport = async () => {
   formData.append("file", selectedFile)
 
   let endpoint = ""
-  let typeLabel = ""
+  
 
   if (importType === "production") {
   endpoint = "http://localhost:8080/imports/production"
-  typeLabel = "Production"
+  
 
 } else if (importType === "feeding") {
   endpoint = "http://localhost:8080/imports/feeding"
-  typeLabel = "Alimentation"
+ 
 
 } else if (importType === "cows") {
   endpoint = "http://localhost:8080/imports/cows"
-  typeLabel = "Vaches"
+  
 }
 
   try {
+    console.log("Type choisi :", importType)
+console.log("Endpoint choisi :", endpoint)
     const response = await fetch(endpoint, {
       method: "POST",
       body: formData,
@@ -66,20 +68,51 @@ const handleImport = async () => {
 
     alert(message)
 
-    setHistory((prev) => [
-      {
-        fileName: selectedFile.name,
-        type: typeLabel,
-        importDate: new Date().toISOString(),
-        status: "Importé"
-      },
-      ...prev
-    ])
+const historyResponse = await fetch(
+  "http://localhost:8080/imports/history"
+)
 
-    setSelectedFile(null)
+const historyData = await historyResponse.json()
+
+setHistory(historyData)
+
+setSelectedFile(null)
 
   } catch (error) {
     console.error("Erreur import :", error)
+    alert(error.message)
+  }
+}
+const handleDeleteImport = async (id) => {
+  const confirmDelete = window.confirm(
+    "Voulez-vous vraiment supprimer cet import et ses données ?"
+  )
+
+  if (!confirmDelete) return
+
+  try {
+    const response = await fetch(
+      `http://localhost:8080/imports/${id}`,
+      {
+        method: "DELETE"
+      }
+    )
+
+    const message = await response.text()
+
+    if (!response.ok) {
+      throw new Error(message)
+    }
+
+    // On enlève l'import de l'écran
+    setHistory((prev) =>
+      prev.filter((item) => item.id !== id)
+    )
+
+    alert(message)
+
+  } catch (error) {
+    console.error("Erreur suppression :", error)
     alert(error.message)
   }
 }
@@ -204,7 +237,7 @@ const handleImport = async () => {
         </article>
       </div>
 
-      <article className="history-panel">
+<article className="history-panel">
   <div className="history-header">
     <div>
       <h3>Historique des imports</h3>
@@ -218,16 +251,34 @@ const handleImport = async () => {
       <span>Type</span>
       <span>Date</span>
       <span>Statut</span>
+      <span>Actions</span>
     </div>
 
-    {history.map((item, index) => (
-      <div className="history-row" key={index}>
+    {history.map((item) => (
+      <div className="history-row" key={item.id}>
         <strong>{item.fileName}</strong>
+
         <span>{item.type}</span>
-        <span>{new Date(item.importDate).toLocaleString("fr-FR")}</span>
+
+        <span>
+          {new Date(item.importDate).toLocaleString("fr-FR")}
+        </span>
+
         <span className="import-status success">
           {item.status}
         </span>
+
+        <div>
+          {item.type === "Production" && (
+            <button
+              type="button"
+              className="delete-import-button"
+              onClick={() => handleDeleteImport(item.id)}
+            >
+              Supprimer
+            </button>
+          )}
+        </div>
       </div>
     ))}
   </div>
