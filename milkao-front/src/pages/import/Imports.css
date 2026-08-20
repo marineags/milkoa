@@ -308,4 +308,27 @@
   .history-labels {
     display: none;
   }
+  .import-panel {
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.upload-zone {
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
+}
+
+.import-type-selector {
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
+}
+
+.import-button {
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
+}
 }

@@ -39,16 +39,24 @@ public class ImportController {
         this.alertRepository = alertRepository;
     }
 
+    // =========================
+    // IMPORT PRODUCTION
+    // =========================
+
     @PostMapping("/production")
     public ResponseEntity<String> importProduction(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("farmId") Integer farmId
     ) {
         try {
 
-            if (importHistoryRepository.existsByFileName(file.getOriginalFilename())) {
+            if (importHistoryRepository.existsByFileNameAndFarmId(
+                    file.getOriginalFilename(),
+                    farmId
+            )) {
                 return ResponseEntity
                         .badRequest()
-                        .body("Ce fichier a déjà été importé.");
+                        .body("Ce fichier a déjà été importé pour cette ferme.");
             }
 
             ImportHistory history = new ImportHistory();
@@ -57,6 +65,7 @@ public class ImportController {
             history.setType("Production");
             history.setImportDate(java.time.LocalDateTime.now());
             history.setStatus("Importé");
+            history.setFarmId(farmId);
 
             history = importHistoryRepository.save(history);
 
@@ -110,29 +119,38 @@ public class ImportController {
             }
 
             return ResponseEntity.ok(
-                    "Import terminé avec succès"
+                    "Import production terminé avec succès"
             );
 
         } catch (Exception error) {
+
             return ResponseEntity
                     .badRequest()
                     .body(
-                            "Erreur pendant l'import : "
+                            "Erreur pendant l'import production : "
                                     + error.getMessage()
                     );
         }
     }
 
+    // =========================
+    // IMPORT ALIMENTATION
+    // =========================
+
     @PostMapping("/feeding")
     public ResponseEntity<String> importFeeding(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("farmId") Integer farmId
     ) {
         try {
 
-            if (importHistoryRepository.existsByFileName(file.getOriginalFilename())) {
+            if (importHistoryRepository.existsByFileNameAndFarmId(
+                    file.getOriginalFilename(),
+                    farmId
+            )) {
                 return ResponseEntity
                         .badRequest()
-                        .body("Ce fichier a déjà été importé.");
+                        .body("Ce fichier a déjà été importé pour cette ferme.");
             }
 
             ImportHistory history = new ImportHistory();
@@ -141,6 +159,7 @@ public class ImportController {
             history.setType("Alimentation");
             history.setImportDate(java.time.LocalDateTime.now());
             history.setStatus("Importé");
+            history.setFarmId(farmId);
 
             history = importHistoryRepository.save(history);
 
@@ -190,6 +209,7 @@ public class ImportController {
             );
 
         } catch (Exception error) {
+
             return ResponseEntity
                     .badRequest()
                     .body(
@@ -199,16 +219,24 @@ public class ImportController {
         }
     }
 
+    // =========================
+    // IMPORT VACHES
+    // =========================
+
     @PostMapping("/cows")
     public ResponseEntity<String> importCows(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("farmId") Integer farmId
     ) {
         try {
 
-            if (importHistoryRepository.existsByFileName(file.getOriginalFilename())) {
+            if (importHistoryRepository.existsByFileNameAndFarmId(
+                    file.getOriginalFilename(),
+                    farmId
+            )) {
                 return ResponseEntity
                         .badRequest()
-                        .body("Ce fichier a déjà été importé.");
+                        .body("Ce fichier a déjà été importé pour cette ferme.");
             }
 
             ImportHistory history = new ImportHistory();
@@ -217,6 +245,7 @@ public class ImportController {
             history.setType("Vaches");
             history.setImportDate(java.time.LocalDateTime.now());
             history.setStatus("Importé");
+            history.setFarmId(farmId);
 
             history = importHistoryRepository.save(history);
 
@@ -242,23 +271,20 @@ public class ImportController {
 
                 String[] values = line.split(",");
 
-                Integer farmId =
-                        Integer.parseInt(values[0].trim());
-
                 String identifier =
-                        values[1].trim();
+                        values[0].trim();
 
                 String name =
-                        values[2].trim();
+                        values[1].trim();
 
                 Integer lactationNumber =
-                        Integer.parseInt(values[3].trim());
+                        Integer.parseInt(values[2].trim());
 
                 Integer lactationDays =
-                        Integer.parseInt(values[4].trim());
+                        Integer.parseInt(values[3].trim());
 
                 String status =
-                        values[5].trim();
+                        values[4].trim();
 
                 Cow cow = new Cow();
 
@@ -279,6 +305,7 @@ public class ImportController {
             );
 
         } catch (Exception error) {
+
             return ResponseEntity
                     .badRequest()
                     .body(
@@ -288,12 +315,23 @@ public class ImportController {
         }
     }
 
+    // =========================
+    // HISTORIQUE PAR FERME
+    // =========================
+
     @GetMapping("/history")
-    public ResponseEntity<?> getHistory() {
+    public ResponseEntity<?> getHistory(
+            @RequestParam("farmId") Integer farmId
+    ) {
         return ResponseEntity.ok(
-                importHistoryRepository.findAll()
+                importHistoryRepository
+                        .findByFarmIdOrderByImportDateDesc(farmId)
         );
     }
+
+    // =========================
+    // PRODUCTIONS
+    // =========================
 
     @GetMapping("/production")
     public ResponseEntity<?> getProductions() {
@@ -301,6 +339,10 @@ public class ImportController {
                 milkProductionRepository.findAll()
         );
     }
+
+    // =========================
+    // SUPPRESSION D'UN IMPORT
+    // =========================
 
     @Transactional
     @DeleteMapping("/{id}")
@@ -351,6 +393,7 @@ public class ImportController {
             );
 
         } catch (Exception error) {
+
             return ResponseEntity
                     .badRequest()
                     .body(

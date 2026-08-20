@@ -1,0 +1,106 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f5f5f5;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.register-card h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.register-card > p {
+  margin: 0 0 24px;
+  color: #666;
+}
+
+.register-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.register-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.register-card input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-card input:focus {
+  border-color: #333;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.register-card button {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.register-card button[type='submit'] {
+  background: #222;
+  color: white;
+  margin-top: 4px;
+}
+
+.register-card button[type='submit']:hover {
+  background: #000;
+}
+
+.register-card button[type='button'] {
+  background: transparent;
+  color: #555;
+  border: 1px solid #d8d8d8;
+}
+
+.register-card button[type='button']:hover {
+  background: #f7f7f7;
+}
+
+.register-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff2f2;
+  color: #c62828;
+  font-size: 14px;
+}
+
+@media (max-width: 500px) {
+  .register-page {
+    padding: 16px;
+  }
+
+  .register-card {
+    padding: 24px 20px;
+  }
+}

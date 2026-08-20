@@ -21,6 +21,9 @@ public class ImportHistory {
 
     private String status;
 
+    @Column(name = "farm_id")
+    private Integer farmId;
+
     public ImportHistory() {
     }
 
@@ -62,5 +65,12 @@ public class ImportHistory {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    public Integer getFarmId() {
+        return farmId;
+    }
+
+    public void setFarmId(Integer farmId) {
+        this.farmId = farmId;
     }
 }
