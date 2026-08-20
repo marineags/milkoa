@@ -11,6 +11,9 @@ public class Cow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "import_id")
+    private Integer importId;
+
     @Column(name = "farm_id")
     private Integer farmId;
 
@@ -94,5 +97,13 @@ public class Cow {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getImportId() {
+        return importId;
+    }
+
+    public void setImportId(Integer importId) {
+        this.importId = importId;
     }
 }

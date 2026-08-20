@@ -60,6 +60,9 @@ console.log("Endpoint choisi :", endpoint)
     const message = await response.text()
 
     console.log("Status :", response.status)
+console.log("Réponse backend :", message)
+
+    console.log("Status :", response.status)
     console.log("Réponse backend :", message)
 
     if (!response.ok) {
@@ -269,7 +272,7 @@ const handleDeleteImport = async (id) => {
         </span>
 
         <div>
-          {item.type === "Production" && (
+          {(item.type === "Production" || item.type === "Alimentation" || item.type === "Vaches") && (
             <button
               type="button"
               className="delete-import-button"

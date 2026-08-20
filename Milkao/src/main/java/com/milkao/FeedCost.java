@@ -12,6 +12,9 @@ public class FeedCost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "import_id")
+    private Integer importId;
+
     @Column(name = "cow_id")
     private Long cowId;
 
@@ -50,5 +53,12 @@ public class FeedCost {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+    public Integer getImportId() {
+        return importId;
+    }
+
+    public void setImportId(Integer importId) {
+        this.importId = importId;
     }
 }

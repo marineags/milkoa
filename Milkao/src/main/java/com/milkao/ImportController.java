@@ -1,14 +1,15 @@
 package com.milkao;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/imports")
@@ -22,17 +23,20 @@ public class ImportController {
     private final ImportHistoryRepository importHistoryRepository;
     private final FeedCostRepository feedCostRepository;
     private final CowRepository cowRepository;
+    private final AlertRepository alertRepository;
 
     public ImportController(
             MilkProductionRepository milkProductionRepository,
             ImportHistoryRepository importHistoryRepository,
             FeedCostRepository feedCostRepository,
-            CowRepository cowRepository
+            CowRepository cowRepository,
+            AlertRepository alertRepository
     ) {
         this.milkProductionRepository = milkProductionRepository;
         this.importHistoryRepository = importHistoryRepository;
         this.feedCostRepository = feedCostRepository;
         this.cowRepository = cowRepository;
+        this.alertRepository = alertRepository;
     }
 
     @PostMapping("/production")
@@ -47,7 +51,6 @@ public class ImportController {
                         .body("Ce fichier a déjà été importé.");
             }
 
-            // 1. On crée d'abord l'historique de l'import
             ImportHistory history = new ImportHistory();
 
             history.setFileName(file.getOriginalFilename());
@@ -59,7 +62,6 @@ public class ImportController {
 
             Integer importId = history.getId();
 
-            // 2. On lit le fichier
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream())
             );
@@ -89,7 +91,6 @@ public class ImportController {
                 BigDecimal liters =
                         new BigDecimal(values[2].trim());
 
-                // 3. On évite les doublons
                 if (!milkProductionRepository
                         .existsByCowIdAndProductionDate(
                                 cowId,
@@ -102,8 +103,6 @@ public class ImportController {
                     production.setCowId(cowId);
                     production.setProductionDate(productionDate);
                     production.setLiters(liters);
-
-                    // 4. On relie la production à son import
                     production.setImportId(importId);
 
                     milkProductionRepository.save(production);
@@ -124,13 +123,6 @@ public class ImportController {
         }
     }
 
-    @GetMapping("/history")
-    public ResponseEntity<?> getHistory() {
-        return ResponseEntity.ok(
-                importHistoryRepository.findAll()
-        );
-    }
-
     @PostMapping("/feeding")
     public ResponseEntity<String> importFeeding(
             @RequestParam("file") MultipartFile file
@@ -142,6 +134,17 @@ public class ImportController {
                         .badRequest()
                         .body("Ce fichier a déjà été importé.");
             }
+
+            ImportHistory history = new ImportHistory();
+
+            history.setFileName(file.getOriginalFilename());
+            history.setType("Alimentation");
+            history.setImportDate(java.time.LocalDateTime.now());
+            history.setStatus("Importé");
+
+            history = importHistoryRepository.save(history);
+
+            Integer importId = history.getId();
 
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream())
@@ -163,7 +166,8 @@ public class ImportController {
 
                 String[] values = line.split(",");
 
-                Long cowId = Long.parseLong(values[0].trim());
+                Long cowId =
+                        Long.parseLong(values[0].trim());
 
                 LocalDate costDate =
                         LocalDate.parse(values[1].trim());
@@ -176,18 +180,10 @@ public class ImportController {
                 feedCost.setCowId(cowId);
                 feedCost.setCostDate(costDate);
                 feedCost.setAmount(amount);
+                feedCost.setImportId(importId);
 
                 feedCostRepository.save(feedCost);
             }
-
-            ImportHistory history = new ImportHistory();
-
-            history.setFileName(file.getOriginalFilename());
-            history.setType("Alimentation");
-            history.setImportDate(java.time.LocalDateTime.now());
-            history.setStatus("Importé");
-
-            importHistoryRepository.save(history);
 
             return ResponseEntity.ok(
                     "Import alimentation terminé avec succès"
@@ -202,6 +198,7 @@ public class ImportController {
                     );
         }
     }
+
     @PostMapping("/cows")
     public ResponseEntity<String> importCows(
             @RequestParam("file") MultipartFile file
@@ -213,6 +210,17 @@ public class ImportController {
                         .badRequest()
                         .body("Ce fichier a déjà été importé.");
             }
+
+            ImportHistory history = new ImportHistory();
+
+            history.setFileName(file.getOriginalFilename());
+            history.setType("Vaches");
+            history.setImportDate(java.time.LocalDateTime.now());
+            history.setStatus("Importé");
+
+            history = importHistoryRepository.save(history);
+
+            Integer importId = history.getId();
 
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream())
@@ -261,18 +269,10 @@ public class ImportController {
                 cow.setLactationDays(lactationDays);
                 cow.setStatus(status);
                 cow.setCreatedAt(java.time.LocalDateTime.now());
+                cow.setImportId(importId);
 
                 cowRepository.save(cow);
             }
-
-            ImportHistory history = new ImportHistory();
-
-            history.setFileName(file.getOriginalFilename());
-            history.setType("Vaches");
-            history.setImportDate(java.time.LocalDateTime.now());
-            history.setStatus("Importé");
-
-            importHistoryRepository.save(history);
 
             return ResponseEntity.ok(
                     "Import des vaches terminé avec succès"
@@ -287,15 +287,26 @@ public class ImportController {
                     );
         }
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory() {
+        return ResponseEntity.ok(
+                importHistoryRepository.findAll()
+        );
+    }
+
     @GetMapping("/production")
     public ResponseEntity<?> getProductions() {
         return ResponseEntity.ok(
                 milkProductionRepository.findAll()
         );
     }
+
     @Transactional
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteImport(@PathVariable Integer id) {
+    public ResponseEntity<String> deleteImport(
+            @PathVariable Integer id
+    ) {
         try {
 
             ImportHistory history = importHistoryRepository
@@ -310,6 +321,27 @@ public class ImportController {
 
             if ("Production".equals(history.getType())) {
                 milkProductionRepository.deleteByImportId(id);
+            }
+
+            if ("Alimentation".equals(history.getType())) {
+                feedCostRepository.deleteByImportId(id);
+            }
+
+            if ("Vaches".equals(history.getType())) {
+
+                List<Cow> cowsToDelete =
+                        cowRepository.findByImportId(id);
+
+                List<Integer> cowIds = cowsToDelete
+                        .stream()
+                        .map(Cow::getId)
+                        .toList();
+
+                if (!cowIds.isEmpty()) {
+                    alertRepository.deleteByCowIdIn(cowIds);
+                }
+
+                cowRepository.deleteByImportId(id);
             }
 
             importHistoryRepository.deleteById(id);
@@ -327,4 +359,4 @@ public class ImportController {
                     );
         }
     }
-    }
+}
